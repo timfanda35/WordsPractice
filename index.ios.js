@@ -5,6 +5,7 @@
 'use strict';
 
 var React = require('react-native');
+
 var {
   AppRegistry,
   StyleSheet,
@@ -13,24 +14,65 @@ var {
   TouchableHighlight,
 } = React;
 
+var words = [
+  {
+    en: 'welcome',
+    zh: '歡迎'
+  },
+  {
+    en: 'hello',
+    zh: '哈囉'
+  },
+  {
+    en: 'world',
+    zh: '世界'
+  }
+];
+
 var WordsView = React.createClass({
   render: function() {
     return (
       <View style={styles.viewWord}>
-        <Text style={styles.textWord}>
-          {this.props.word}
+        <Text style={styles.textEnWord}>
+          {this.props.word.en}
+        </Text>
+
+        <Text style={styles.textZhWord}>
+          {this._getZhExplain()}
         </Text>
       </View>
     );
   },
+
+  _getZhExplain: function() {
+    if (!this.props.isShowExplain) {
+      return ' ';
+    };
+
+    return this.props.word.zh;
+  },
 });
 
-var words = ['welcome', 'hello', 'world'];
+var LongButton = React.createClass({
+  render: function() {
+    return (
+      <TouchableHighlight underlayColor='transparent'>
+        <Text style={[styles.buttonBase, this.props.buttonStyle]} onPress={this.props.callback}>
+          {this.props.buttonText}
+        </Text>
+      </TouchableHighlight>
+    );
+  },
+});
 
 var WordsPractice = React.createClass({
   getInitialState: function() {
     return {
-      word: '',
+      word: {
+        en: '',
+        zh: ''
+      },
+      isShowExplain: false,
     };
   },
 
@@ -41,25 +83,48 @@ var WordsPractice = React.createClass({
   render: function() {
     return (
       <View style={styles.container}>
-        <WordsView word={this.state.word} />
+        <WordsView word={this.state.word} isShowExplain={this.state.isShowExplain} />
 
         <View style={styles.buttonBlock}>
-          {this._renderButton('I don\'t know', styles.buttonCancel, this._nextWord)}
+          {this._renderCancelButton()}
 
-          {this._renderButton('I see', styles.buttonOK, this._nextWord)}
+          {this._renderOKButton()}
         </View>
       </View>
     );
   },
 
-  _renderButton: function(text, buttonStyle, callback) {
+  _renderCancelButton: function() {
+    if (this.state.isShowExplain) {
+      return;
+    }
+
     return (
-      <TouchableHighlight underlayColor='transparent'>
-        <Text style={[styles.buttonBase, buttonStyle]} onPress={callback}>
-          {text}
-        </Text>
-      </TouchableHighlight>
+      <LongButton
+        buttonText={'I don\'t know'}
+        buttonStyle={styles.buttonCancel}
+        callback={this._showExplain}
+      >
+      </LongButton>
     );
+  },
+
+  _renderOKButton: function() {
+    return (
+      <LongButton
+        buttonText={'I see'}
+        buttonStyle={styles.buttonOK}
+        callback={this._nextWord}
+      >
+      </LongButton>
+    );
+  },
+
+  _showExplain: function() {
+    this.setState({
+      word: this.state.word,
+      isShowExplain: true,
+    });
   },
 
   _nextWord: function() {
@@ -67,6 +132,7 @@ var WordsPractice = React.createClass({
 
     this.setState({
       word: words[index],
+      isShowExplain: false,
     });
   },
 });
@@ -86,8 +152,12 @@ var styles = StyleSheet.create({
     marginBottom: 30,
     justifyContent: 'center',
   },
-  textWord: {
+  textEnWord: {
     fontSize: 46,
+    textAlign: 'center',
+  },
+  textZhWord: {
+    fontSize: 24,
     textAlign: 'center',
   },
   buttonBlock: {
@@ -99,7 +169,6 @@ var styles = StyleSheet.create({
     margin: 5,
     padding: 10,
     width: 100,
-    borderRadius: 5,
   },
   buttonCancel: {
     backgroundColor: 'red',
