@@ -10,25 +10,65 @@ var {
   StyleSheet,
   Text,
   View,
+  TouchableHighlight,
 } = React;
 
-var WordsPractice = React.createClass({
+var WordsView = React.createClass({
   render: function() {
     return (
-      <View style={styles.container}>
-        <Text style={styles.welcome}>
-          Welcome to React Native!
-        </Text>
-        <Text style={styles.instructions}>
-          To get started, edit index.ios.js
-        </Text>
-        <Text style={styles.instructions}>
-          Press Cmd+R to reload,{'\n'}
-          Cmd+D or shake for dev menu
+      <View style={styles.viewWord}>
+        <Text style={styles.textWord}>
+          {this.props.word}
         </Text>
       </View>
     );
-  }
+  },
+});
+
+var words = ['welcome', 'hello', 'world'];
+
+var WordsPractice = React.createClass({
+  getInitialState: function() {
+    return {
+      word: '',
+    };
+  },
+
+  componentDidMount: function() {
+    this._nextWord();
+  },
+
+  render: function() {
+    return (
+      <View style={styles.container}>
+        <WordsView word={this.state.word} />
+
+        <View style={styles.buttonBlock}>
+          {this._renderButton('I don\'t know', styles.buttonCancel, this._nextWord)}
+
+          {this._renderButton('I see', styles.buttonOK, this._nextWord)}
+        </View>
+      </View>
+    );
+  },
+
+  _renderButton: function(text, buttonStyle, callback) {
+    return (
+      <TouchableHighlight underlayColor='transparent'>
+        <Text style={[styles.buttonBase, buttonStyle]} onPress={callback}>
+          {text}
+        </Text>
+      </TouchableHighlight>
+    );
+  },
+
+  _nextWord: function() {
+    var index = Math.floor(Math.random() * words.length);
+
+    this.setState({
+      word: words[index],
+    });
+  },
 });
 
 var styles = StyleSheet.create({
@@ -38,15 +78,34 @@ var styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
   },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
+  viewWord: {
+    width: 300,
+    height: 150,
+    borderRadius: 10,
+    backgroundColor: '#F5EAEE',
+    marginBottom: 30,
+    justifyContent: 'center',
   },
-  instructions: {
+  textWord: {
+    fontSize: 46,
     textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
+  },
+  buttonBlock: {
+    flexDirection: 'row',
+  },
+  buttonBase: {
+    textAlign: 'center',
+    color: 'white',
+    margin: 5,
+    padding: 10,
+    width: 100,
+    borderRadius: 5,
+  },
+  buttonCancel: {
+    backgroundColor: 'red',
+  },
+  buttonOK: {
+    backgroundColor: 'green',
   },
 });
 
