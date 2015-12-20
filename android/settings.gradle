@@ -1,0 +1,3 @@
+rootProject.name = 'WordsPractice'
+
+include ':app'
