@@ -21,15 +21,16 @@ Parse.initialize(
   Environment.PARSE_JAVASCRIPT_KEY
 );
 
-var words = [];
-var wordIndex = 0;
+var cards = [];
+var cardIndex = 0;
+var isLoadingCards = false;
 
-var WordsView = React.createClass({
+var CardView = React.createClass({
   render: function() {
     return (
       <View style={styles.viewWord}>
         <Text style={styles.textEnWord}>
-          {this.props.word.en}
+          {this.props.card.word}
         </Text>
 
         <Text style={styles.textZhWord}>
@@ -44,7 +45,7 @@ var WordsView = React.createClass({
       return ' ';
     };
 
-    return this.props.word.zh;
+    return this.props.card.explain;
   },
 });
 
@@ -63,31 +64,35 @@ var LongButton = React.createClass({
 var WordsPractice = React.createClass({
   getInitialState: function() {
     return {
-      word: {
-        en: '',
-        zh: ''
+      card: {
+        word: '',
+        explain: ''
       },
       isShowExplain: false,
     };
   },
 
   componentDidMount: function() {
-    this._loadWords(this._nextWord);
+    this._loadCards(this._nextWord);
 
   },
 
-  _loadWords: function(callback) {
-    var query = (new Parse.Query('Word')).descending('createAt');
+  _loadCards: function(callback) {
+    isLoadingCards = true;
+
+    var query = (new Parse.Query('Card')).descending('createAt');
     query.find({
       success: function(results) {
         console.log("Successfully retrieved " + results.length + " words.");
 
+        cards = [];
         for (var i = 0; i < results.length; i++) {
           var object = results[i];
           console.log(object.id + ' - ' + object.get('word'));
-          words.push({ en: object.get('word'), zh: object.get('explain') });
+          cards.push({ word: object.get('word'), explain: object.get('explain') });
         }
 
+        isLoadingCards = false;
         callback();
       },
       error: function(error) {
@@ -99,7 +104,7 @@ var WordsPractice = React.createClass({
   render: function() {
     return (
       <View style={styles.container}>
-        <WordsView word={this.state.word} isShowExplain={this.state.isShowExplain} />
+        <CardView card={this.state.card} isShowExplain={this.state.isShowExplain} />
 
         <View style={styles.buttonBlock}>
           {this._renderCancelButton()}
@@ -140,22 +145,24 @@ var WordsPractice = React.createClass({
 
   _showExplain: function() {
     this.setState({
-      word: this.state.word,
+      word: this.state.card,
       isShowExplain: true,
     });
   },
 
   _nextWord: function() {
-    var len = words.length;
+    if (isLoadingCards) { return; };
 
-    if (wordIndex == len) {
-      wordIndex = 0;
+    var len = cards.length;
+
+    if (cardIndex == len) {
+      cardIndex = 0;
       this._loadWords(this._nextWord);
       return;
     };
 
     this.setState({
-      word: words[wordIndex++],
+      card: cards[cardIndex++],
       isShowExplain: false,
     });
   },

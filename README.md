@@ -19,8 +19,8 @@ npm install
 Login [Parse.com](https://parse.com)
 
 - Create a Project
-- In Data section of Core page,  create a Class name `Word`
-- Add Col to `Word`, Table schema:
+- In Data section of Core page,  create a Class name `Card`
+- Add Col to `Card`, Table schema:
 
 | type         | name
 | ------------ | ----
