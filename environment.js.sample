@@ -1,0 +1,6 @@
+var Environment = {
+    PARSE_APPLICATION_ID: '',
+    PARSE_JAVASCRIPT_KEY: '',
+};
+
+module.exports = Environment

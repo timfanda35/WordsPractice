@@ -5,6 +5,8 @@
 'use strict';
 
 var React = require('react-native');
+var Parse = require('parse/react-native');
+var Environment = require('./environment.js');
 
 var {
   AppRegistry,
@@ -14,20 +16,13 @@ var {
   TouchableHighlight,
 } = React;
 
-var words = [
-  {
-    en: 'welcome',
-    zh: '歡迎'
-  },
-  {
-    en: 'hello',
-    zh: '哈囉'
-  },
-  {
-    en: 'world',
-    zh: '世界'
-  }
-];
+Parse.initialize(
+  Environment.PARSE_APPLICATION_ID,
+  Environment.PARSE_JAVASCRIPT_KEY
+);
+
+var words = [];
+var wordIndex = 0;
 
 var WordsView = React.createClass({
   render: function() {
@@ -77,7 +72,28 @@ var WordsPractice = React.createClass({
   },
 
   componentDidMount: function() {
-    this._nextWord();
+    this._loadWords(this._nextWord);
+
+  },
+
+  _loadWords: function(callback) {
+    var query = (new Parse.Query('Word')).descending('createAt');
+    query.find({
+      success: function(results) {
+        console.log("Successfully retrieved " + results.length + " words.");
+
+        for (var i = 0; i < results.length; i++) {
+          var object = results[i];
+          console.log(object.id + ' - ' + object.get('word'));
+          words.push({ en: object.get('word'), zh: object.get('explain') });
+        }
+
+        callback();
+      },
+      error: function(error) {
+        console.log("Error: " + error.code + " " + error.message);
+      }
+    });
   },
 
   render: function() {
@@ -95,15 +111,17 @@ var WordsPractice = React.createClass({
   },
 
   _renderCancelButton: function() {
+    var btnStyle = [styles.buttonCancel];
     if (this.state.isShowExplain) {
-      return;
+      btnStyle.push(styles.buttonDisable);
     }
 
     return (
       <LongButton
         buttonText={'I don\'t know'}
-        buttonStyle={styles.buttonCancel}
+        buttonStyle={btnStyle}
         callback={this._showExplain}
+        disable={true}
       >
       </LongButton>
     );
@@ -128,10 +146,16 @@ var WordsPractice = React.createClass({
   },
 
   _nextWord: function() {
-    var index = Math.floor(Math.random() * words.length);
+    var len = words.length;
+
+    if (wordIndex == len) {
+      wordIndex = 0;
+      this._loadWords(this._nextWord);
+      return;
+    };
 
     this.setState({
-      word: words[index],
+      word: words[wordIndex++],
       isShowExplain: false,
     });
   },
@@ -153,7 +177,7 @@ var styles = StyleSheet.create({
     justifyContent: 'center',
   },
   textEnWord: {
-    fontSize: 46,
+    fontSize: 40,
     textAlign: 'center',
   },
   textZhWord: {
@@ -175,6 +199,9 @@ var styles = StyleSheet.create({
   },
   buttonOK: {
     backgroundColor: 'green',
+  },
+  buttonDisable: {
+    backgroundColor: 'gray',
   },
 });
 
