@@ -82,6 +82,8 @@ var WordsPractice = React.createClass({
   _loadCards: function(callback) {
     isLoadingCards = true;
 
+    var noCardCallback = this._renderNoCard;
+
     var today = new Date();
     today.setHours(0, 0, 0, 0);
     today.setDate(today.getDate() + 1);
@@ -100,9 +102,13 @@ var WordsPractice = React.createClass({
           cardObjects = results;
           callback();
         }
+        else {
+          noCardCallback();
+        }
       },
       error: function(error) {
         console.log("Error: " + error.code + " " + error.message);
+        noCardCallback();
       }
     });
   },
@@ -170,10 +176,12 @@ var WordsPractice = React.createClass({
   _showExplain: function() {
     if (isLoadingCards) { return; };
 
-    this._setRemindDate(REMIND_DATE_FORGET_INTERVAL);
+    if(cardObjects.length > 0) {
+      this._setRemindDate(REMIND_DATE_FORGET_INTERVAL);
+    }
 
     this.setState({
-      word: this.state.card,
+      card: this.state.card,
       isShowExplain: true,
     });
   },
@@ -197,6 +205,14 @@ var WordsPractice = React.createClass({
     cardObject.set("remindDate", remindDate);
     cardObject.save();
   },
+
+  _renderNoCard: function() {
+    var card = { word: "NO WORD", explain: "沒有可背的單字" }
+    this.setState({
+      card: card,
+      isShowExplain: true,
+    });
+  }
 });
 
 var styles = StyleSheet.create({
