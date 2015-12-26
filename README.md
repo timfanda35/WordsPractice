@@ -29,6 +29,7 @@ Login [Parse.com](https://parse.com)
 | Date         | updatedAt
 | String       | word
 | String       | explain
+| Date         | remindDate
 
 - In Keys page of Settings section, get api keys:
   - Application ID
