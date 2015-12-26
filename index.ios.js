@@ -24,6 +24,8 @@ Parse.initialize(
 var cardObjects = [];
 var cardIndex = 0;
 var isLoadingCards = false;
+var REMIND_DATE_REMEMBER_INTERVAL = 7;
+var REMIND_DATE_FORGET_INTERVAL = 3;
 
 var CardView = React.createClass({
   render: function() {
@@ -80,8 +82,14 @@ var WordsPractice = React.createClass({
   _loadCards: function(callback) {
     isLoadingCards = true;
 
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    today.setDate(today.getDate() + 1);
+
     var query = new Parse.Query('Card');
+    query.lessThanOrEqualTo("remindDate", today);
     query.descending('updatedAt');
+    query.descending('remindDate');
 
     query.find({
       success: function(results) {
@@ -141,15 +149,6 @@ var WordsPractice = React.createClass({
     );
   },
 
-  _showExplain: function() {
-    if (isLoadingCards) { return; };
-
-    this.setState({
-      word: this.state.card,
-      isShowExplain: true,
-    });
-  },
-
   _nextCard: function() {
     var len = cardObjects.length;
 
@@ -159,7 +158,7 @@ var WordsPractice = React.createClass({
       return;
     };
 
-    var cardObject = cardObjects[cardIndex++];
+    var cardObject = cardObjects[cardIndex];
     var card = { word: cardObject.get('word'), explain: cardObject.get('explain') }
 
     this.setState({
@@ -168,10 +167,35 @@ var WordsPractice = React.createClass({
     });
   },
 
+  _showExplain: function() {
+    if (isLoadingCards) { return; };
+
+    this._setRemindDate(REMIND_DATE_FORGET_INTERVAL);
+
+    this.setState({
+      word: this.state.card,
+      isShowExplain: true,
+    });
+  },
+
   _remember: function() {
     if (isLoadingCards) { return; };
 
+    if(cardObjects.length > 0 && !this.state.isShowExplain) {
+      this._setRemindDate(REMIND_DATE_REMEMBER_INTERVAL);
+    }
+
     this._nextCard();
+  },
+
+  _setRemindDate: function(day) {
+    var remindDate = new Date();
+    remindDate.setHours(0, 0, 0, 0);
+    remindDate.setDate(remindDate.getDate() + day);
+
+    var cardObject = cardObjects[cardIndex++];
+    cardObject.set("remindDate", remindDate);
+    cardObject.save();
   },
 });
 
