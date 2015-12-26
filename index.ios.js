@@ -21,7 +21,7 @@ Parse.initialize(
   Environment.PARSE_JAVASCRIPT_KEY
 );
 
-var cards = [];
+var cardObjects = [];
 var cardIndex = 0;
 var isLoadingCards = false;
 
@@ -73,27 +73,25 @@ var WordsPractice = React.createClass({
   },
 
   componentDidMount: function() {
-    this._loadCards(this._nextWord);
+    this._loadCards(this._nextCard);
 
   },
 
   _loadCards: function(callback) {
     isLoadingCards = true;
 
-    var query = (new Parse.Query('Card')).descending('createAt');
+    var query = new Parse.Query('Card');
+    query.descending('updatedAt');
+
     query.find({
       success: function(results) {
         console.log("Successfully retrieved " + results.length + " words.");
 
-        cards = [];
-        for (var i = 0; i < results.length; i++) {
-          var object = results[i];
-          console.log(object.id + ' - ' + object.get('word'));
-          cards.push({ word: object.get('word'), explain: object.get('explain') });
-        }
-
         isLoadingCards = false;
-        callback();
+        if (results.length > 0) {
+          cardObjects = results;
+          callback();
+        }
       },
       error: function(error) {
         console.log("Error: " + error.code + " " + error.message);
@@ -137,34 +135,43 @@ var WordsPractice = React.createClass({
       <LongButton
         buttonText={'I see'}
         buttonStyle={styles.buttonOK}
-        callback={this._nextWord}
+        callback={this._remember}
       >
       </LongButton>
     );
   },
 
   _showExplain: function() {
+    if (isLoadingCards) { return; };
+
     this.setState({
       word: this.state.card,
       isShowExplain: true,
     });
   },
 
-  _nextWord: function() {
-    if (isLoadingCards) { return; };
-
-    var len = cards.length;
+  _nextCard: function() {
+    var len = cardObjects.length;
 
     if (cardIndex == len) {
       cardIndex = 0;
-      this._loadWords(this._nextWord);
+      this._loadCards(this._nextCard);
       return;
     };
 
+    var cardObject = cardObjects[cardIndex++];
+    var card = { word: cardObject.get('word'), explain: cardObject.get('explain') }
+
     this.setState({
-      card: cards[cardIndex++],
+      card: card,
       isShowExplain: false,
     });
+  },
+
+  _remember: function() {
+    if (isLoadingCards) { return; };
+
+    this._nextCard();
   },
 });
 
